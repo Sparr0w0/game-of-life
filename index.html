@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conway's Game of Life</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            margin: 20px;
+        }
+        #controls {
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="500" height="500"></canvas>
+    <div id="controls">
+        <button onclick="startGame()">Start</button>
+        <button onclick="stopGame()">Stop</button>
+        <button onclick="clearBoard()">Clear</button>
+        <button onclick="randomizeBoard()">Randomize</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const gridSize = 50;
+        const cellSize = canvas.width / gridSize;
+        let grid = createGrid();
+        let interval;
+
+        function createGrid() {
+            const grid = new Array(gridSize);
+            for (let i = 0; i < gridSize; i++) {
+                grid[i] = new Array(gridSize).fill(0);
+            }
+            return grid;
+        }
+
+        function drawGrid() {
+            for (let x = 0; x < gridSize; x++) {
+                for (let y = 0; y < gridSize; y++) {
+                    ctx.fillStyle = grid[x][y] === 1 ? 'black' : 'white';
+                    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                    ctx.strokeStyle = 'gray';
+                    ctx.lineWidth = 0.5;
+                    ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                }
+            }
+        }
+
+        function countLiveNeighbors(x, y) {
+            let count = 0;
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    if (dx === 0 && dy === 0) continue;
+                    const nx = (x + dx + gridSize) % gridSize;
+                    const ny = (y + dy + gridSize) % gridSize;
+                    count += grid[nx][ny];
+                }
+            }
+            return count;
+        }
+
+        function updateGrid() {
+            const newGrid = createGrid();
+            for (let x = 0; x < gridSize; x++) {
+                for (let y = 0; y < gridSize; y++) {
+                    const liveNeighbors = countLiveNeighbors(x, y);
+                    if (grid[x][y] === 1) {
+                        newGrid[x][y] = (liveNeighbors === 2 || liveNeighbors === 3) ? 1 : 0;
+                    } else {
+                        newGrid[x][y] = (liveNeighbors === 3) ? 1 : 0;
+                    }
+                }
+            }
+            grid = newGrid;
+            drawGrid();
+        }
+
+        function startGame() {
+            if (!interval) {
+                interval = setInterval(updateGrid, 100);
+            }
+        }
+
+        function stopGame() {
+            if (interval) {
+                clearInterval(interval);
+                interval = null;
+            }
+        }
+
+        function clearBoard() {
+            grid = createGrid();
+            drawGrid();
+        }
+
+        function randomizeBoard() {
+            for (let x = 0; x < gridSize; x++) {
+                for (let y = 0; y < gridSize; y++) {
+                    grid[x][y] = Math.random() < 0.5 ? 1 : 0;
+                }
+            }
+            drawGrid();
+        }
+
+        canvas.addEventListener('click', (e) => {
+            const x = Math.floor(e.offsetX / cellSize);
+            const y = Math.floor(e.offsetY / cellSize);
+            grid[x][y] = grid[x][y] === 1 ? 0 : 1;
+            drawGrid();
+        });
+
+        drawGrid();
+    </script>
+</body>
+</html>
